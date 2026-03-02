@@ -11,4 +11,9 @@ export class DashboardController {
   getFleetOverview() {
     return this.dashboardService.getFleetOverview();
   }
+
+  @Get('vehicle-statuses')
+  getVehicleStatuses() {
+    return this.dashboardService.getVehicleStatuses();
+  }
 }
