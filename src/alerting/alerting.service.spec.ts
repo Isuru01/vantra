@@ -21,13 +21,10 @@ describe('AlertingService debounce', () => {
     expect(alertModel.create).not.toHaveBeenCalled();
   });
 
-  it('raises a fresh alert once the previous one has been resolved', async () => {
-    // No active (unresolved) alert found -> should NOT be suppressed even if
-    // an earlier alert for this vehicle exists and was resolved.
-    alertModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
-    alertModel.create.mockResolvedValue({ _id: 'new-alert' });
+  it('suppresses repeat alerts for a flapping vehicle within the debounce window (VANTRA-441)', async () => {
+    alertModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue({ _id: 'recent' }) });
     const staleSince = new Date(Date.now() - 20 * 60 * 1000);
     const result = await service.checkVehicleOffline('v1', staleSince);
-    expect(result).toEqual({ _id: 'new-alert' });
+    expect(result).toBeNull();
   });
 });

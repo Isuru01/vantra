@@ -4,7 +4,9 @@ import { Model } from 'mongoose';
 import { Alert, AlertDocument } from './schemas/alert.schema';
 
 const OFFLINE_THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes
-const DEBOUNCE_WINDOW_MS = 15 * 60 * 1000; // don't re-alert within 15 min of an active alert
+// Widened from 15min -> 6h after ops reported repeated alert noise for
+// flapping vehicles (VANTRA-441).
+const DEBOUNCE_WINDOW_MS = 6 * 60 * 60 * 1000;
 
 @Injectable()
 export class AlertingService {
@@ -16,19 +18,17 @@ export class AlertingService {
       return null;
     }
 
-    // Only suppress if there's already an *active* (unresolved) alert of this
-    // type raised recently - once an alert is resolved, a fresh occurrence
-    // should always raise a new one.
-    const recentActive = await this.alertModel
+    // Suppress if this vehicle raised an offline alert recently, full stop -
+    // resolved or not. Cuts down on repeat notifications for flapping vehicles.
+    const recent = await this.alertModel
       .findOne({
         vehicleId,
         type: 'vehicle-offline',
-        resolvedAt: null,
         createdAt: { $gte: new Date(Date.now() - DEBOUNCE_WINDOW_MS) },
       })
       .exec();
 
-    if (recentActive) {
+    if (recent) {
       return null;
     }
 
