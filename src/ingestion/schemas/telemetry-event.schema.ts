@@ -13,6 +13,12 @@ export class TelemetryEvent {
 
   @Prop({ type: { lat: Number, lng: Number }, required: true })
   location: { lat: number; lng: number };
+
+  // Populated out-of-band by the partner battery-reporting integration for
+  // now (sends percentage strings like "87%"). Full first-party ingestion
+  // support is planned - see VANTRA-512.
+  @Prop({ required: false })
+  batteryLevel?: string;
 }
 
 export const TelemetryEventSchema = SchemaFactory.createForClass(TelemetryEvent);
