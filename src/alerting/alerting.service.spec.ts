@@ -3,6 +3,7 @@ import { AlertingService } from './alerting.service';
 describe('AlertingService debounce', () => {
   let service: AlertingService;
   let alertModel: any;
+  let telemetryModel: any;
 
   beforeEach(() => {
     alertModel = {
@@ -10,7 +11,11 @@ describe('AlertingService debounce', () => {
       create: jest.fn(),
       find: jest.fn(),
     };
-    service = new AlertingService(alertModel);
+    telemetryModel = {
+      distinct: jest.fn(),
+      findOne: jest.fn(),
+    };
+    service = new AlertingService(alertModel, telemetryModel);
   });
 
   it('does not raise a duplicate while an active alert already exists', async () => {
