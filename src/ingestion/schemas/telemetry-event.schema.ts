@@ -14,11 +14,14 @@ export class TelemetryEvent {
   @Prop({ type: { lat: Number, lng: Number }, required: true })
   location: { lat: number; lng: number };
 
-  // Populated out-of-band by the partner battery-reporting integration for
-  // now (sends percentage strings like "87%"). Full first-party ingestion
-  // support is planned - see VANTRA-512.
-  @Prop({ required: false })
-  batteryLevel?: string;
+  // Populated out-of-band by the partner battery-reporting integration.
+  // NOTE: originally always a percentage string ("87%"). Newer device
+  // firmware sends this as a plain number instead - older documents were
+  // never backfilled, so this field is inconsistently typed across the
+  // collection. Type widened to Mixed to stop Mongoose from coercing/
+  // dropping the newer numeric values. See VANTRA-512.
+  @Prop({ type: Object, required: false })
+  batteryLevel?: string | number;
 
   // Engine diagnostics (fault codes, temperature, RPM) are on the device
   // firmware roadmap but not yet sent by any fleet. Field reserved so the
