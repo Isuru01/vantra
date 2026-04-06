@@ -10,6 +10,11 @@ services:
       JWT_SECRET: local-dev-secret
     depends_on:
       - mongo
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
 
   mongo:
     image: mongo:7
@@ -17,6 +22,11 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   redis:
     image: redis:7
