@@ -11,6 +11,10 @@ export class TelemetryEvent {
   @Prop({ required: true })
   recordedAt: Date;
 
+  // Populated by the { timestamps: { createdAt: 'receivedAt' } } option
+  // above - declared explicitly here so it's typed on the class.
+  receivedAt?: Date;
+
   @Prop({ type: { lat: Number, lng: Number }, required: true })
   location: { lat: number; lng: number };
 

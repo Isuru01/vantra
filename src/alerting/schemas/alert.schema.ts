@@ -14,7 +14,7 @@ export class Alert {
   @Prop({ required: true })
   message: string;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   resolvedAt: Date | null;
 }
 

@@ -34,6 +34,9 @@ export class DriftCorrectionJob {
 
     let corrected = 0;
     for (const doc of candidates) {
+      if (!doc.receivedAt) {
+        continue;
+      }
       const drift = Math.abs(doc.receivedAt.getTime() - doc.recordedAt.getTime());
       if (drift > DRIFT_THRESHOLD_MS) {
         doc.recordedAt = new Date(doc.receivedAt.getTime() - 1000);

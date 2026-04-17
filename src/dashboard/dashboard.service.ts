@@ -21,7 +21,7 @@ export class DashboardService {
    */
   async getVehicleStatuses() {
     const vehicles = await this.vehiclesService.findAll();
-    const statuses = [];
+    const statuses: { vehicle: unknown; latest: unknown }[] = [];
     for (const vehicle of vehicles) {
       // One query per vehicle - fine for a handful of vehicles in dev,
       // but this is the hot path so keep an eye on it as fleet size grows.
