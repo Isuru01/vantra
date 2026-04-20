@@ -7,7 +7,23 @@ Fleet telemetry backend. NestJS + MongoDB.
 ### Local (no Docker)
 1. `npm install`
 2. Copy `.env.example` to `.env`
-3. `npm run start:dev`
+3. `npm run seed` to populate local MongoDB with historical fleet data
+4. `npm run start:dev`
 
 ### Docker
 1. `docker-compose up`
+2. `npm run seed` (against the compose Mongo instance) once containers are up
+
+## Scripts
+
+- `npm run start:dev` - run the API locally with hot reload
+- `npm run seed` - populate MongoDB with historical fleet + telemetry data
+- `npm test` - run the test suite
+- `npm run typecheck` - type-check without emitting
+
+## Known issues
+
+This has grown organically over the past several months and hasn't had a
+dedicated cleanup pass. If something in local dev doesn't come up cleanly
+on the first try, it's likely not you - check logs before assuming your
+environment is misconfigured.
