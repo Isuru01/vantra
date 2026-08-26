@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TelemetryEvent, TelemetryEventDocument } from './schemas/telemetry-event.schema';
 import { IngestTelemetryDto } from './dto/ingest-telemetry.dto';
-import { isNotFuture, isPlausibleCoordinate } from './ingestion.validators';
+import { isNotFuture, isPlausibleCoordinate, isBatteryLevelValid, isValidTemperature } from './ingestion.validators';
 
 @Injectable()
 export class IngestionService {
@@ -18,10 +18,22 @@ export class IngestionService {
     if (!isNotFuture(dto.recordedAt)) {
       throw new BadRequestException('recordedAt cannot be in the future');
     }
+
+    // T3. For new battery level check battery range
+    if (!isBatteryLevelValid(dto.batteryLevel)) {
+      throw new BadRequestException('Battery level must be between 0 and 100');
+    }
+
+    if (!isValidTemperature(dto.engineDiagnostics?.temperature)) {
+      throw new BadRequestException('Temperature must be a finite number');
+    }
+
     const event = await this.telemetryModel.create({
       vehicleId: dto.vehicleId,
       recordedAt: new Date(dto.recordedAt),
       location: { lat: dto.lat, lng: dto.lng },
+      batteryLevel: dto.batteryLevel,
+      engineDiagnostics: dto.engineDiagnostics,
     });
     return event;
   }

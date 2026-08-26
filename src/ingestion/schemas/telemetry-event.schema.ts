@@ -33,6 +33,8 @@ export class TelemetryEvent {
   // Ingestion/validation for this is not yet implemented - VANTRA-538.
   @Prop({ type: Object, required: false })
   engineDiagnostics?: Record<string, unknown>;
+
+
 }
 
 export const TelemetryEventSchema = SchemaFactory.createForClass(TelemetryEvent);

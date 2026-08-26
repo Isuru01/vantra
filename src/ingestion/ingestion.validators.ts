@@ -5,3 +5,23 @@ export function isPlausibleCoordinate(lat: number, lng: number): boolean {
 export function isNotFuture(dateIso: string, toleranceMs = 60_000): boolean {
   return new Date(dateIso).getTime() <= Date.now() + toleranceMs;
 }
+
+// T3. For new battery level check battery range
+export function isBatteryLevelValid(
+  batteryLevel: number | undefined,
+): boolean {
+  return (
+    batteryLevel === undefined ||
+    (Number.isFinite(batteryLevel) &&
+      batteryLevel >= 0 &&
+      batteryLevel <= 100)
+  );
+}
+
+export function isValidTemperature(
+  temperature: number | undefined,
+): boolean {
+  return (
+    temperature === undefined || Number.isFinite(temperature)
+  );
+}
