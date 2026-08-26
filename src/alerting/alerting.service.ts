@@ -34,6 +34,7 @@ export class AlertingService {
       .findOne({
         vehicleId,
         type: 'vehicle-offline',
+        resolvedAt: null, //T2. Only suppress if the alert is still active, not if it was resolved.
         createdAt: { $gte: new Date(Date.now() - DEBOUNCE_WINDOW_MS) },
       })
       .exec();
