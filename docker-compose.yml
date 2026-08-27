@@ -9,12 +9,25 @@ services:
       MONGO_URI: mongodb://mongo:27017/vantra
       JWT_SECRET: local-dev-secret
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     deploy:
       resources:
         limits:
           memory: 256M
           cpus: "0.25"
+
+  alerting:
+    build:
+      context: ./alerting-service
+    ports:
+      - "3001:3001"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/vantra
+      PORT: 3001
+    depends_on:
+      mongo:
+        condition: service_healthy
 
   mongo:
     image: mongo:7
@@ -23,7 +36,7 @@ services:
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 5s
       timeout: 3s
       retries: 5
