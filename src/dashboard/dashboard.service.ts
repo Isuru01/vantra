@@ -1,14 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { TelemetryEvent, TelemetryEventDocument } from '../ingestion/schemas/telemetry-event.schema';
+import { Cache } from 'cache-manager'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 
 @Injectable()
 export class DashboardService {
   constructor(
     private readonly vehiclesService: VehiclesService,
     @InjectModel(TelemetryEvent.name) private telemetryModel: Model<TelemetryEventDocument>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) { }
 
   async getFleetOverview() {
@@ -20,6 +23,15 @@ export class DashboardService {
    * This is the most frequently hit read on the dashboard.
    */
   async getVehicleStatuses() {
+    
+    const cacheKey = "dashboard:vehicle-statuses";
+
+    const cachedStatuses = await this.cacheManager.get(cacheKey);
+
+    if (cachedStatuses) {
+      return cachedStatuses;
+    }
+
     const vehicles = await this.vehiclesService.findAll();
     // const statuses: { vehicle: unknown; latest: unknown }[] = [];
     // for (const vehicle of vehicles) {
@@ -54,6 +66,9 @@ export class DashboardService {
       vehicle,
       latest: latestByVehicle.get(vehicle.vehicleId) || null,
     }));
+
+
+    await this.cacheManager.set(cacheKey, statuses,60_000 ); // Cache for 60 seconds
 
     return statuses;
   }

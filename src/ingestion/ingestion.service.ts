@@ -1,14 +1,18 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TelemetryEvent, TelemetryEventDocument } from './schemas/telemetry-event.schema';
 import { IngestTelemetryDto } from './dto/ingest-telemetry.dto';
 import { isNotFuture, isPlausibleCoordinate, isBatteryLevelValid, isValidTemperature } from './ingestion.validators';
+import { Cache } from 'cache-manager'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+
 
 @Injectable()
 export class IngestionService {
   constructor(
     @InjectModel(TelemetryEvent.name) private telemetryModel: Model<TelemetryEventDocument>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
   async ingest(dto: IngestTelemetryDto) {
@@ -37,7 +41,8 @@ export class IngestionService {
     });
 
 
-    console.log(event);
+    // invalidate the cache for vehicle statuses since new telemetry has been ingested
+    await this.cacheManager.del("dashboard:vehicle-statuses"); 
 
     return event;
   }
