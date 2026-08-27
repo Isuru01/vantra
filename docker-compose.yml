@@ -7,7 +7,9 @@ services:
       - "3000:3000"
     environment:
       MONGO_URI: mongodb://mongo:27017/vantra
-      JWT_SECRET: local-dev-secret
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      ALERTING_SERVICE_URL: http://alerting:3001
+      ALERTING_SERVICE_TOKEN: ${ALERTING_SERVICE_TOKEN:?Set ALERTING_SERVICE_TOKEN in .env}
     depends_on:
       mongo:
         condition: service_healthy
@@ -25,6 +27,7 @@ services:
     environment:
       MONGO_URI: mongodb://mongo:27017/vantra
       PORT: 3001
+      ALERTING_SERVICE_TOKEN: ${ALERTING_SERVICE_TOKEN:?Set ALERTING_SERVICE_TOKEN in .env}
     depends_on:
       mongo:
         condition: service_healthy

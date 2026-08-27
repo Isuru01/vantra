@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AlertingService } from './alerting.service';
+import { AlertingService } from "./alerting.service"
 import { AlertingController } from './alerting.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Alert, AlertSchema } from './schemas/alert.schema';
@@ -8,6 +8,7 @@ import {
     TelemetryEvent,
     TelemetryEventSchema,
 } from './schemas/telemetry-event.schema';
+import { InternalTokenGuard } from '../auth/internal-token.guard';
 
 
 @Module({
@@ -18,7 +19,7 @@ import {
         ]),
     ],
     controllers: [AlertingController, RecalibrateController],
-    providers: [AlertingService],
+    providers: [AlertingService, InternalTokenGuard],
     exports: [AlertingService],
 })
 export class AlertingModule {}
