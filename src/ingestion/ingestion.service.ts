@@ -35,6 +35,10 @@ export class IngestionService {
       batteryLevel: dto.batteryLevel,
       engineDiagnostics: dto.engineDiagnostics,
     });
+
+
+    console.log(event);
+
     return event;
   }
 }

@@ -38,3 +38,5 @@ export class TelemetryEvent {
 }
 
 export const TelemetryEventSchema = SchemaFactory.createForClass(TelemetryEvent);
+
+TelemetryEventSchema.index({ vehicleId: 1, recordedAt: -1 });
