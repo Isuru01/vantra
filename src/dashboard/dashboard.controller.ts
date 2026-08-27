@@ -1,6 +1,7 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DashboardService } from './dashboard.service';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard)

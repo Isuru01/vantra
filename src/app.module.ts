@@ -8,9 +8,13 @@ import { IngestionModule } from './ingestion/ingestion.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AlertingModule } from './alerting/alerting.module';
 import { CommonModule } from './common/common.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
+    CacheModule.register({
+      isGlobal: true
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://localhost:27017/vantra'),
@@ -21,5 +25,6 @@ import { CommonModule } from './common/common.module';
     AlertingModule,
     CommonModule,
   ],
+
 })
 export class AppModule {}
