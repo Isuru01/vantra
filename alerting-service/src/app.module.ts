@@ -1,21 +1,15 @@
 import { Module } from '@nestjs/common';
-import { createObserveModule } from '@nestjs/observe';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-
-export const { ObserveModule, ObserveInstrument } = createObserveModule();
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AlertingModule } from './alerting/alerting.module';
 
 @Module({
   imports: [
-    // Distributed tracing, auto-correlated logs, request/job metrics, error
-    // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com
-    ObserveModule.forRoot({
-      appKey: 'YOUR_APP_KEY',
-      appSecret: 'YOUR_APP_SECRET',
-      serviceId: 'alerting-service',
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
+    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://localhost:27017/vantra'),
+    AlertingModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
