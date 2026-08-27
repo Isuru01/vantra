@@ -13,7 +13,6 @@ export class DashboardController {
     return this.dashboardService.getFleetOverview();
   }
 
-  @UseInterceptors(CacheInterceptor)
   @Get('vehicle-statuses')
   getVehicleStatuses() {
     return this.dashboardService.getVehicleStatuses();

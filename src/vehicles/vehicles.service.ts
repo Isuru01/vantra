@@ -20,10 +20,10 @@ export class VehiclesService {
     return this.vehicleModel.findOne({ vehicleId }).exec();
   }
 
-  create(vehicleId: string, fleetName: string) {
-    const vehicle = this.vehicleModel.create({ vehicleId, fleetName });
+  async create(vehicleId: string, fleetName: string) {
+    const vehicle = await this.vehicleModel.create({ vehicleId, fleetName });
     // T5:Invalidate the cache for vehicle statuses since a new vehicle has been added
-    this.cacheManager.del("dashboard:vehicle-statuses");
+    await this.cacheManager.del("dashboard:vehicle-statuses");
     return vehicle;
   }
 }
