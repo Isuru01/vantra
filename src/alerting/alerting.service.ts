@@ -31,12 +31,6 @@ export class AlertingService {
     );
   }
 
-  resolve(alertId: string): Promise<AlertResponse | null> {
-    return this.request<AlertResponse | null>(`/internal/alerts/${encodeURIComponent(alertId)}/resolve`, {
-      method: 'PATCH',
-    });
-  }
-
   recalibrateVehicle(vehicleId: string): Promise<RecalibrateResponse> {
     return this.request<RecalibrateResponse>(
       `/internal/admin/vehicles/${encodeURIComponent(vehicleId)}/force-recalibrate`,
