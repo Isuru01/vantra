@@ -1,35 +1,29 @@
+import { ConfigService } from '@nestjs/config';
 import { AlertingService } from './alerting.service';
 
-describe('AlertingService debounce', () => {
-  let service: AlertingService;
-  let alertModel: any;
-  let telemetryModel: any;
+describe('AlertingService HTTP client', () => {
+  it('calls the standalone service with the internal token', async () => {
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+    const config = {
+      get: jest.fn((key: string) => ({
+        ALERTING_SERVICE_URL: 'http://localhost:3001',
+        ALERTING_SERVICE_TOKEN: 'test-token',
+      })[key]),
+    } as unknown as ConfigService;
+    const service = new AlertingService(config);
 
-  beforeEach(() => {
-    alertModel = {
-      findOne: jest.fn(),
-      create: jest.fn(),
-      find: jest.fn(),
-    };
-    telemetryModel = {
-      distinct: jest.fn(),
-      findOne: jest.fn(),
-    };
-    service = new AlertingService(alertModel, telemetryModel);
-  });
+    await service.findActiveForVehicle('VH-00001');
 
-  it('does not raise a duplicate while an active alert already exists', async () => {
-    alertModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue({ _id: 'existing' }) });
-    const staleSince = new Date(Date.now() - 20 * 60 * 1000);
-    const result = await service.checkVehicleOffline('v1', staleSince);
-    expect(result).toBeNull();
-    expect(alertModel.create).not.toHaveBeenCalled();
-  });
-
-  it('suppresses repeat alerts for a flapping vehicle within the debounce window (VANTRA-441)', async () => {
-    alertModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue({ _id: 'recent' }) });
-    const staleSince = new Date(Date.now() - 20 * 60 * 1000);
-    const result = await service.checkVehicleOffline('v1', staleSince);
-    expect(result).toBeNull();
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3001/internal/alerts/VH-00001',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer test-token',
+        }),
+      }),
+    );
+    fetchMock.mockRestore();
   });
 });

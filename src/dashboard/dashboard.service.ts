@@ -23,7 +23,7 @@ export class DashboardService {
    * This is the most frequently hit read on the dashboard.
    */
   async getVehicleStatuses() {
-    
+
     const cacheKey = "dashboard:vehicle-statuses";
 
     const cachedStatuses = await this.cacheManager.get(cacheKey);
@@ -45,11 +45,10 @@ export class DashboardService {
     // }
 
 
-    // T4. Use aggregation to get the latest telemetry for all vehicles in one query. And fix N+1 query problem. Aggreagations starts from the Vehicle Models 
-    // since the assuming all vehicles are required status even there is no telementry for theme
-
+    // T4 Fetch latest telemetry for all vehicles in a single query using aggregation fixes N+1 query problem.
+    // Sort by the vehicleId, recordedAt: -1
     const latestTelemetry = await this.telemetryModel.aggregate([
-      { $sort: { recordedAt: -1, vehicleId: 1 } },
+      { $sort: { vehicleId: 1, recordedAt: -1 } },
       {
         $group: {
           _id: '$vehicleId',
@@ -68,7 +67,7 @@ export class DashboardService {
     }));
 
 
-    await this.cacheManager.set(cacheKey, statuses,60_000 ); // Cache for 60 seconds
+    await this.cacheManager.set(cacheKey, statuses, 60_000); // Cache for 60 seconds
 
     return statuses;
   }
