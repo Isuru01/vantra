@@ -1,8 +1,13 @@
-// import { Transform } from 'class-transformer/types/decorators/transform.decorator';
-import { IsDateString, IsNumber, IsObject, IsOptional, IsString, IsArray, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-
-
+import {
+  IsArray,
+  IsDateString,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 export class EngineDiagnosticsDto {
   @IsOptional()
@@ -18,7 +23,6 @@ export class EngineDiagnosticsDto {
   @IsNumber()
   rpm?: number;
 }
-
 
 export class IngestTelemetryDto {
   @IsString()
