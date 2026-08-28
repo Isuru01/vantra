@@ -18,23 +18,15 @@ export class TelemetryEvent {
   @Prop({ type: { lat: Number, lng: Number }, required: true })
   location: { lat: number; lng: number };
 
-  // Populated out-of-band by the partner battery-reporting integration.
-  // NOTE: originally always a percentage string ("87%"). Newer device
-  // firmware sends this as a plain number instead - older documents were
-  // never backfilled, so this field is inconsistently typed across the
-  // collection. Type widened to Mixed to stop Mongoose from coercing/
-  // dropping the newer numeric values. See VANTRA-512.
+  // Historical records may contain percentage strings, while new ingestion
+  // stores normalized numeric values. Existing records are not migrated.
   @Prop({ type: Object, required: false })
   batteryLevel?: string | number;
 
-  // Engine diagnostics (fault codes, temperature, RPM) are on the device
-  // firmware roadmap but not yet sent by any fleet. Field reserved so the
-  // schema doesn't need another migration once they start arriving.
-  // Ingestion/validation for this is not yet implemented - VANTRA-538.
+  // Optional diagnostics are grouped so the telemetry contract can evolve
+  // without adding a top-level field for every device metric.
   @Prop({ type: Object, required: false })
   engineDiagnostics?: Record<string, unknown>;
-
-
 }
 
 export const TelemetryEventSchema = SchemaFactory.createForClass(TelemetryEvent);
