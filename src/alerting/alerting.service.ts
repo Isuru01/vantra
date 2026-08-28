@@ -1,79 +1,67 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { Model } from 'mongoose';
-import { Alert, AlertDocument } from './schemas/alert.schema';
-import { TelemetryEvent, TelemetryEventDocument } from '../ingestion/schemas/telemetry-event.schema';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
-const OFFLINE_THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes
-// Widened from 15min -> 6h after ops reported repeated alert noise for
-// flapping vehicles (VANTRA-441).
-const DEBOUNCE_WINDOW_MS = 6 * 60 * 60 * 1000;
+export interface AlertResponse {
+  _id: string;
+  vehicleId: string;
+  type: string;
+  message: string;
+  resolvedAt: Date | null;
+}
+
+export interface RecalibrateResponse {
+  vehicleId: string;
+  recalibrated: boolean;
+  clearedAlerts: number;
+}
 
 @Injectable()
 export class AlertingService {
-  private readonly logger = new Logger(AlertingService.name);
+  private readonly serviceUrl: string;
+  private readonly serviceToken: string;
 
-  constructor(
-    @InjectModel(Alert.name) private alertModel: Model<AlertDocument>,
-    // Reaching directly into ingestion's collection here rather than going
-    // through IngestionService/VehiclesService - convenient short-term, but
-    // means this module now knows about telemetry's schema shape directly.
-    @InjectModel(TelemetryEvent.name) private telemetryModel: Model<TelemetryEventDocument>,
-  ) {}
-
-  async checkVehicleOffline(vehicleId: string, lastSeenAt: Date) {
-    const staleFor = Date.now() - lastSeenAt.getTime();
-    if (staleFor <= OFFLINE_THRESHOLD_MS) {
-      return null;
-    }
-
-    // Suppress if this vehicle raised an offline alert recently, full stop -
-    // resolved or not. Cuts down on repeat notifications for flapping vehicles.
-    const recent = await this.alertModel
-      .findOne({
-        vehicleId,
-        type: 'vehicle-offline',
-        resolvedAt: null, //T2. Only suppress if the alert is still active, not if it was resolved.
-        createdAt: { $gte: new Date(Date.now() - DEBOUNCE_WINDOW_MS) },
-      })
-      .exec();
-
-    if (recent) {
-      return null;
-    }
-
-    return this.alertModel.create({
-      vehicleId,
-      type: 'vehicle-offline',
-      message: `Vehicle ${vehicleId} has not reported telemetry in over 15 minutes`,
-    });
+  constructor(private readonly configService: ConfigService) {
+    this.serviceUrl = this.configService.get<string>('ALERTING_SERVICE_URL') || 'http://localhost:3001';
+    this.serviceToken = this.configService.get<string>('ALERTING_SERVICE_TOKEN') || '';
   }
 
-  findActiveForVehicle(vehicleId: string) {
-    return this.alertModel.find({ vehicleId, resolvedAt: null }).exec();
+  findActiveForVehicle(vehicleId: string): Promise<AlertResponse[]> {
+    return this.request<AlertResponse[]>(
+      `/internal/alerts/${encodeURIComponent(vehicleId)}`,
+    );
   }
 
-  resolve(alertId: string) {
-    return this.alertModel.findByIdAndUpdate(alertId, { resolvedAt: new Date() }).exec();
+  recalibrateVehicle(vehicleId: string): Promise<RecalibrateResponse> {
+    return this.request<RecalibrateResponse>(
+      `/internal/admin/vehicles/${encodeURIComponent(vehicleId)}/force-recalibrate`,
+      { method: 'POST' },
+    );
   }
 
-  /**
-   * Sweeps every vehicle's most recent telemetry event and raises offline
-   * alerts as needed. Called on a schedule.
-   */
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  async sweepFleetForOffline() {
-    this.logger.debug('Running fleet offline sweep');
-    const vehicleIds: string[] = await this.telemetryModel.distinct('vehicleId').exec();
-    for (const vehicleId of vehicleIds) {
-      const latest = await this.telemetryModel
-        .findOne({ vehicleId })
-        .sort({ recordedAt: -1 })
-        .exec();
-      if (latest) {
-        await this.checkVehicleOffline(vehicleId, latest.recordedAt);
+  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    try {
+      const response = await fetch(`${this.serviceUrl}${path}`, {
+        ...init,
+        headers: {
+          Authorization: `Bearer ${this.serviceToken}`,
+          'Content-Type': 'application/json',
+          ...init.headers,
+        },
+      });
+
+      if (!response.ok) {
+        throw new ServiceUnavailableException(
+          `Alerting service returned ${response.status}`,
+        );
       }
+
+      return (await response.json()) as T;
+    } catch (error) {
+      if (error instanceof ServiceUnavailableException) {
+        throw error;
+      }
+
+      throw new ServiceUnavailableException('Alerting service is unavailable');
     }
   }
 }
