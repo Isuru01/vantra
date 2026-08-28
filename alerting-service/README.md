@@ -1,3 +1,25 @@
+# Vantra Alerting Service
+Standalone NestJS service for alert retrieval, offline sweeps, and vehicle-alert recalibration.
+
+## Run locally
+```powershell
+npm install
+$env:MONGO_URI="mongodb://127.0.0.1:27017/vantra"
+$env:PORT="3001"
+$env:ALERTING_SERVICE_TOKEN="your-strong-local-token"
+npm run start:dev
+```
+The service exposes Swagger at `http://localhost:3001/docs` and OpenAPI JSON at `http://localhost:3001/docs-json`.
+## Internal routes
+```text
+GET  /internal/alerts/:vehicleId
+POST /internal/admin/vehicles/:vehicleId/force-recalibrate
+```
+Both routes require:
+```http
+Authorization: Bearer <ALERTING_SERVICE_TOKEN>
+```
+The main Vantra API exposes the user-facing routes and proxies requests to this service. See the root README for the architecture and known limitations.
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
