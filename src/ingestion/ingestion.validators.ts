@@ -6,7 +6,6 @@ export function isNotFuture(dateIso: string, toleranceMs = 60_000): boolean {
   return new Date(dateIso).getTime() <= Date.now() + toleranceMs;
 }
 
-// T3. For new battery level check battery range
 export function isBatteryLevelValid(
   batteryLevel: number | undefined,
 ): boolean {
@@ -21,7 +20,5 @@ export function isBatteryLevelValid(
 export function isValidTemperature(
   temperature: number | undefined,
 ): boolean {
-  return (
-    temperature === undefined || Number.isFinite(temperature)
-  );
+  return temperature === undefined || Number.isFinite(temperature);
 }
