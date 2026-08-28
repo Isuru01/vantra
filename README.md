@@ -1,4 +1,4 @@
-# Vantra Compass Slice
+# Vantra
 
 Vantra is a NestJS and TypeScript fleet telemetry backend backed by MongoDB. This repository contains my implementation of the focused Project Compass assessment slice.
 
